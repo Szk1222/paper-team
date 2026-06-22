@@ -17,6 +17,7 @@
 - `model`
 - `base_url`
 - `api_key`
+- `max_tokens`（可选）
 
 `provider` 固定写入 `custom`。`reasoning_effort` 不由本功能管理，沿用 Hermes profile 原有配置。
 
@@ -43,6 +44,7 @@ class ModelConfigRecord(TimestampMixin, Base):
 | `model` | 实际模型名 | `gpt-5.4` |
 | `base_url` | OpenAI 兼容接口地址 | `https://example.com/v1` |
 | `api_key` | 明文 API Key 或环境变量占位符 | `sk-xxx` / `${OPENAI_API_KEY}` |
+| `max_tokens` | 单次响应输出 token 上限；留空使用模型原生上限 | `8192` |
 
 模型配置是可复用模板，不是 Agent 运行时真相源。Agent 当前模型从 profile `config.yaml` 读取。
 
@@ -56,9 +58,10 @@ model:
   provider: custom
   base_url: <model_config.base_url>
   api_key: <model_config.api_key>
+max_tokens: <model_config.max_tokens>  # 可选；空值时不写入
 ```
 
-其他配置保持不变，例如 `mcp_servers`、`toolsets` 等。
+`max_tokens` 是输出上限，不是上下文窗口。留空时会删除 profile 顶层 `max_tokens`，让 Hermes 使用模型原生输出上限。其他配置保持不变，例如 `mcp_servers`、`toolsets` 等。
 
 ## 4. 关键文件
 

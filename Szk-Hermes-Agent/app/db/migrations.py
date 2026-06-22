@@ -28,6 +28,13 @@ def ensure_runtime_schema(engine: Engine) -> None:
                 "reviewed_at": "VARCHAR(40) NULL",
             },
         )
+        _ensure_columns(
+            connection,
+            "model_configs",
+            {
+                "max_tokens": "INTEGER NULL",
+            },
+        )
 
 
 def _ensure_columns(connection, table_name: str, columns: dict[str, str]) -> None:

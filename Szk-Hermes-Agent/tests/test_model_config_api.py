@@ -80,12 +80,14 @@ def test_model_config_crud_validates_and_lists(monkeypatch, tmp_path):
             "model": " gpt-5.4 ",
             "base_url": " https://example.com/v1 ",
             "api_key": " sk-xxx ",
+            "max_tokens": "8192",
         },
     )
     assert response.status_code == 201
     data = response.get_json()
     assert data["ok"] is True
     assert data["item"]["name"] == "公司网关"
+    assert data["item"]["max_tokens"] == 8192
 
     list_response = client.get("/api/model-configs")
     assert list_response.status_code == 200
@@ -102,6 +104,7 @@ def test_apply_model_config_updates_profile_yaml(monkeypatch, tmp_path):
             "model": "gpt-5.4",
             "base_url": "https://example.com/v1",
             "api_key": "${OPENAI_API_KEY}",
+            "max_tokens": 8192,
         },
     ).get_json()["item"]
 
@@ -115,6 +118,7 @@ def test_apply_model_config_updates_profile_yaml(monkeypatch, tmp_path):
     assert "agent:\n  name: Dev" in content
     assert "provider: custom" in content
     assert "api_key: ${OPENAI_API_KEY}" in content
+    assert "max_tokens: 8192" in content
 
 
 def test_get_agent_model_reads_profile(monkeypatch, tmp_path):

@@ -26,6 +26,11 @@ def _meta_path(profile_name: str) -> Path:
     return HERMES_HOME / "profiles" / profile_name / META_FILENAME
 
 
+def profile_exists(profile_name: str) -> bool:
+    profile_name = (profile_name or "").strip()
+    return bool(profile_name) and (HERMES_HOME / "profiles" / profile_name / "config.yaml").exists()
+
+
 def soul_path_for(profile_name: str) -> Path:
     return HERMES_HOME / "profiles" / profile_name / "SOUL.md"
 
@@ -146,7 +151,8 @@ def load_team_metas() -> list[dict]:
 
 def bootstrap(store) -> None:
     """Populate a RuntimeStore from disk. Called once on app startup."""
-    for agent in load_team_metas():
+    disk_agents = load_team_metas()
+    for agent in disk_agents:
         if store.has_profile(agent["profile_name"]):
             store.update_agent(
                 agent["agent_id"],
@@ -160,3 +166,14 @@ def bootstrap(store) -> None:
             )
             continue
         store.register_agent(agent)
+    disk_profiles = {agent["profile_name"] for agent in disk_agents}
+    for agent in store.snapshot().get("agents", []):
+        profile_name = agent.get("profile_name") or ""
+        if profile_name in disk_profiles or profile_exists(profile_name):
+            continue
+        store.update_agent(
+            agent["agent_id"],
+            runtime_status="stopped",
+            readiness_status="failed",
+            readiness_message=f"Hermes profile 不存在于当前设备：{profile_name}",
+        )

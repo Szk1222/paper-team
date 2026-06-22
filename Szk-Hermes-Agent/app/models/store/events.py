@@ -9,9 +9,12 @@ from ...config import now_iso
 from .base import NON_PERSISTED_EVENT_TYPES
 
 
+MAX_SSE_SUBSCRIBER_QUEUE = 512
+
+
 class EventsMixin:
     def subscribe(self) -> queue.Queue[str]:
-        q: queue.Queue[str] = queue.Queue()
+        q: queue.Queue[str] = queue.Queue(maxsize=MAX_SSE_SUBSCRIBER_QUEUE)
         with self._lock:
             self._subscribers.append(q)
         return q
@@ -23,7 +26,14 @@ class EventsMixin:
 
     def _broadcast(self, payload: str) -> None:
         for subscriber in list(self._subscribers):
-            subscriber.put(payload)
+            try:
+                subscriber.put_nowait(payload)
+            except queue.Full:
+                try:
+                    subscriber.get_nowait()
+                    subscriber.put_nowait(payload)
+                except (queue.Empty, queue.Full):  # noqa: PERF203
+                    continue
 
     def push_event(
         self, event_type: str, agent_id: str, task_id: str | None, data: dict

@@ -26,6 +26,7 @@ def _serialize(record: ModelConfigRecord) -> dict:
         "model": record.model,
         "base_url": record.base_url,
         "api_key": record.api_key,
+        "max_tokens": record.max_tokens,
         "created_at": record.created_at,
         "updated_at": record.updated_at,
     }
@@ -46,7 +47,22 @@ def _validate_payload(payload: dict[str, Any]) -> dict:
         raise ModelConfigError("base_url must start with http:// or https://")
     if not api_key:
         raise ModelConfigError("api_key is required")
-    return {"name": name, "model": model, "base_url": base_url, "api_key": api_key}
+    raw_max_tokens = payload.get("max_tokens")
+    max_tokens = None
+    if raw_max_tokens not in (None, ""):
+        try:
+            max_tokens = int(raw_max_tokens)
+        except (TypeError, ValueError) as exc:
+            raise ModelConfigError("max_tokens must be a positive integer") from exc
+        if max_tokens <= 0:
+            raise ModelConfigError("max_tokens must be a positive integer")
+    return {
+        "name": name,
+        "model": model,
+        "base_url": base_url,
+        "api_key": api_key,
+        "max_tokens": max_tokens,
+    }
 
 
 def list_model_configs() -> list[dict]:

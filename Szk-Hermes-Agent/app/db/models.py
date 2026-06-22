@@ -134,6 +134,7 @@ class ModelConfigRecord(TimestampMixin, Base):
     model: Mapped[str] = mapped_column(String(160))
     base_url: Mapped[str] = mapped_column(String(500))
     api_key: Mapped[str] = mapped_column(Text, default="")
+    max_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class MessageRecord(Base):

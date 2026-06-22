@@ -42,12 +42,27 @@ def test_ensure_runtime_schema_adds_long_running_task_columns(tmp_path):
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE model_configs (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR(120),
+                    model VARCHAR(160),
+                    base_url VARCHAR(500),
+                    api_key TEXT
+                )
+                """
+            )
+        )
 
     ensure_runtime_schema(engine)
 
     with engine.connect() as connection:
         user_task_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(user_tasks)"))}
         delegation_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(delegations)"))}
+        model_config_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(model_configs)"))}
 
     assert {"current_round", "max_rounds", "review_task_ids_json", "blocked_at", "block_reason"} <= user_task_columns
     assert {"round", "review_task_id", "reviewed_at"} <= delegation_columns
+    assert "max_tokens" in model_config_columns

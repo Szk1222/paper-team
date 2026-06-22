@@ -174,6 +174,7 @@ def read_model_summary(profile_name: str) -> dict:
         "default": str(model.get("default") or ""),
         "provider": str(model.get("provider") or ""),
         "base_url": str(model.get("base_url") or ""),
+        "max_tokens": data.get("max_tokens"),
     }
 
 
@@ -185,6 +186,11 @@ def apply_model_config(profile_name: str, model_config: dict) -> dict:
         "base_url": model_config["base_url"],
         "api_key": model_config["api_key"],
     }
+    max_tokens = model_config.get("max_tokens")
+    if max_tokens:
+        data["max_tokens"] = int(max_tokens)
+    else:
+        data.pop("max_tokens", None)
     write_profile_config(profile_name, data)
     return read_model_summary(profile_name)
 

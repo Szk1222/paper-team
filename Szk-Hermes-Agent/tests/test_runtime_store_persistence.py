@@ -4,6 +4,7 @@ from collections import deque
 from itertools import count
 
 from app.models.store import RuntimeStore
+from app.models.store.events import MAX_SSE_SUBSCRIBER_QUEUE
 from app.services import registry
 
 
@@ -167,6 +168,18 @@ def test_store_does_not_persist_terminal_stream_events():
     assert [event["event_type"] for event in persisted_events] == ["agent.output.final"]
 
 
+def test_sse_subscriber_queue_drops_oldest_when_full():
+    store = RuntimeStore()
+    subscriber = store.subscribe()
+
+    for index in range(MAX_SSE_SUBSCRIBER_QUEUE + 5):
+        store.push_event("agent.terminal.output", "agent_lead", None, {"text": str(index)})
+
+    assert subscriber.qsize() == MAX_SSE_SUBSCRIBER_QUEUE
+    first_payload = subscriber.get_nowait()
+    assert '"text": "0"' not in first_payload
+
+
 def test_bootstrap_refreshes_persisted_agent_readiness(monkeypatch):
     persistence = FakePersistence()
     store = RuntimeStore(persistence)
@@ -184,4 +197,18 @@ def test_bootstrap_refreshes_persisted_agent_readiness(monkeypatch):
 
     agent = store.find_agent("agent_dev")
     assert agent["readiness_status"] == "ready"
+
+
+def test_bootstrap_marks_missing_local_profile_not_ready(monkeypatch, tmp_path):
+    store = RuntimeStore()
+    persisted_agent = _agent("agent_teacher", "teacher", "worker")
+    store.register_agent(persisted_agent)
+    monkeypatch.setattr(registry, "HERMES_HOME", tmp_path / ".hermes")
+    monkeypatch.setattr(registry, "load_team_metas", lambda: [])
+
+    registry.bootstrap(store)
+
+    agent = store.find_agent("agent_teacher")
+    assert agent["readiness_status"] == "failed"
+    assert "profile 不存在" in agent["readiness_message"]
     assert agent["readiness_message"] == "SOUL.md 已就绪"

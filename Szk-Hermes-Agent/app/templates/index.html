@@ -552,7 +552,11 @@
             <span>API Key</span>
             <input name="api_key" type="password" required autocomplete="new-password" placeholder="sk-xxx 或 ${OPENAI_API_KEY}">
           </label>
-          <p class="form-hint">Provider 固定写入 custom；连通性测试会请求 Base URL 下的 /models。</p>
+          <label>
+            <span>输出上限 max_tokens</span>
+            <input name="max_tokens" type="number" min="1" step="1" placeholder="留空使用模型默认上限">
+          </label>
+          <p class="form-hint">Provider 固定写入 custom；max_tokens 为空时让 Hermes 使用模型原生输出上限。</p>
           <div class="modal__actions">
             <button type="button" class="filter-chip" data-close-model-config-edit>取消</button>
             <button class="filter-chip" type="button" id="model-config-save-test">测试后保存</button>

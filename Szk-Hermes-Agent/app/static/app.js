@@ -2226,7 +2226,7 @@ function renderModelConfigs() {
       <div class="mcp-card__head">
         <div>
           <strong>${escapeHtml(item.name)}</strong>
-          <small>${escapeHtml(item.model)}</small>
+          <small>${escapeHtml(item.model)}${item.max_tokens ? ` · max_tokens ${escapeHtml(item.max_tokens)}` : ""}</small>
         </div>
         <div class="mcp-card__actions">
           <button class="filter-chip" type="button" data-model-config-test="${escapeHtml(item.id)}">测试</button>
@@ -2249,6 +2249,7 @@ function openModelConfigEditModal(item = null) {
   modelConfigEditForm.elements.model.value = item?.model || "";
   modelConfigEditForm.elements.base_url.value = item?.base_url || "";
   modelConfigEditForm.elements.api_key.value = item?.api_key || "";
+  modelConfigEditForm.elements.max_tokens.value = item?.max_tokens || "";
   if (modelConfigEditTitle) modelConfigEditTitle.textContent = item ? `编辑模型配置：${item.name}` : "新增模型配置";
   openAnimatedLayer(modelConfigEditModal, modelConfigEditForm.elements.name);
 }
@@ -2270,6 +2271,7 @@ async function saveModelConfigFromForm({ testAfter = false } = {}) {
     model: formData.get("model"),
     base_url: formData.get("base_url"),
     api_key: formData.get("api_key"),
+    max_tokens: formData.get("max_tokens"),
   };
   const endpoint = id ? `/api/model-configs/${id}` : "/api/model-configs";
   const method = id ? "PUT" : "POST";
@@ -2340,7 +2342,7 @@ async function openAgentModelPanel(agentId) {
     if (!response.ok || !data.ok) throw new Error(data.error || "当前模型读取失败");
     const model = data.model || {};
     if (agentModelCurrent) {
-      const summary = [model.default || "未配置", model.base_url || ""].filter(Boolean).join(" · ");
+      const summary = [model.default || "未配置", model.base_url || "", model.max_tokens ? `max_tokens ${model.max_tokens}` : ""].filter(Boolean).join(" · ");
       agentModelCurrent.textContent = `当前模型：${summary}`;
     }
     setAgentModelStatus("", "muted");
@@ -2379,7 +2381,7 @@ async function saveAgentModelSelection(event) {
     setAgentModelStatus(`模型配置已保存${restartHint}。`, "success");
     if (agentModelCurrent) {
       const model = data.model || {};
-      agentModelCurrent.textContent = `当前模型：${[model.default || "未配置", model.base_url || ""].filter(Boolean).join(" · ")}`;
+      agentModelCurrent.textContent = `当前模型：${[model.default || "未配置", model.base_url || "", model.max_tokens ? `max_tokens ${model.max_tokens}` : ""].filter(Boolean).join(" · ")}`;
     }
   } catch (error) {
     setAgentModelStatus(error.message || "模型配置保存失败", "error");
