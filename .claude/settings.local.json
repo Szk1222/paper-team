@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/25823/**)",
-      "Bash(grep -i \"default\\\\|8192\\\\|4096\\\\|or \\\\|=.*[0-9]\\\\{3,\\\\}\\\\|getattr\\\\|\\\\.get\\(\")"
+      "Bash(grep -i \"default\\\\|8192\\\\|4096\\\\|or \\\\|=.*[0-9]\\\\{3,\\\\}\\\\|getattr\\\\|\\\\.get\\(\")",
+      "Bash(xargs grep -ln \"custom\\\\|class.*Profile\")"
     ]
   }
 }
